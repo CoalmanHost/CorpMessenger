@@ -12,6 +12,8 @@ namespace CorpMessengerObjects.UserRequests
     {
         Hello,
         SendMessage,
+        GetMessages,
+        GetUser,
     }
     public static class RequestsExtension
     {

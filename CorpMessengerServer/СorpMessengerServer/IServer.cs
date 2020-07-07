@@ -14,7 +14,6 @@ namespace CorpMessengerServer
         void Sleep();
         void SendObject(int senderUID, int recieverUID, object sentObject);
         Dictionary<int, UserSession> CurrentSessions { get; }
-        RequestHandler RequestReciever { get; }
-        IUserDatabase Users { get; }
+        IServerDatabase Database { get; }
     }
 }

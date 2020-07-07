@@ -6,12 +6,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.Entity;
 using System.Net;
+using LinqKit;
+using System.Linq.Expressions;
 
 namespace CorpMessengerServer.ServerImplementation
 {
-    public class UserDatabaseExample : IUserDatabase
+    public class DatabaseExample : IServerDatabase
     {
-        string connectionString = "CorpMessengerServerDatabaseConnection";
         public class UsersDatabaseContext : DbContext
         {
             public UsersDatabaseContext() : base("CorpMessengerServerDatabaseConnection")
@@ -19,9 +20,10 @@ namespace CorpMessengerServer.ServerImplementation
                 Database.CreateIfNotExists();
             }
             public DbSet<User> Users { get; set; }
+            public DbSet<Message> Messages { get; set; }
         }
         public UsersDatabaseContext database;
-        public UserDatabaseExample()
+        public DatabaseExample()
         {
             database = new UsersDatabaseContext();
             MessengerServer.LogToConsole("Database is ready.");
@@ -66,6 +68,17 @@ namespace CorpMessengerServer.ServerImplementation
         public bool UserExists(int uid)
         {
             return GetUser(uid) == null;
+        }
+
+        public void AddMessage(Message message)
+        {
+            database.Messages.Add(message);
+            database.SaveChanges();
+        }
+        public IEnumerable<Message> GetMessages(Expression<Func<Message, bool>> condition)
+        {
+            var messages = database.Messages.AsExpandable().Where(condition).AsEnumerable();
+            return messages;
         }
 
         public void Dispose()

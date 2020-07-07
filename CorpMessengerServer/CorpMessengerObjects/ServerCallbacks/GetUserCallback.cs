@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace CorpMessengerObjects.ServerCallbacks
 {
-    public abstract class Callback
+    public class GetUserCallback : Callback
     {
-        public int receiverUID;
-        public Callback(int receiverUID)
+        public User requested;
+        public GetUserCallback(int receiverUID, User requested) : base(receiverUID)
         {
-            this.receiverUID = receiverUID;
+            this.requested = requested;
         }
     }
 }

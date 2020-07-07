@@ -11,7 +11,7 @@ namespace CorpMessengerObjects.ServerCallbacks
         public User sender;
         public object sentData;
 
-        public SentObjectCallback(User sender, object sentData)
+        public SentObjectCallback(User sender, User receiver, object sentData) : base(receiver.Id)
         {
             this.sender = sender;
             this.sentData = sentData;

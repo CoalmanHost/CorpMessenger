@@ -9,6 +9,7 @@ namespace CorpMessengerObjects.ServerCallbacks
     public enum CallbackType
     {
         SentObject,
-        Hello
+        Hello,
+        GetMessages
     }
 }

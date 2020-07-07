@@ -42,6 +42,9 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="LinqKit, Version=1.1.17.0, Culture=neutral, PublicKeyToken=bc217f8844052a91, processorArchitecture=MSIL">
+      <HintPath>..\packages\LinqKit.1.1.17\lib\net45\LinqKit.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\Newtonsoft.Json.dll</HintPath>
@@ -57,26 +60,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandExecutor.cs" />
-    <Compile Include="ExecutionEnvironment.cs" />
     <Compile Include="IServer.cs" />
-    <Compile Include="IShipped.cs" />
-    <Compile Include="IUserDatabase.cs" />
+    <Compile Include="IServerDatabase.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RequestHandlerModule\IRequestListener.cs" />
-    <Compile Include="RequestHandlerModule\RequestHandler.cs" />
-    <Compile Include="RequestHandlerModule\UserRequest.cs" />
-    <Compile Include="RequestsExtensions.cs" />
-    <Compile Include="ServerCommandsExecutionModule\CommandObjects\AddUserCommand.cs" />
-    <Compile Include="ServerCommandsExecutionModule\CommandObjects\SendMessageCommand.cs" />
-    <Compile Include="ServerCommandsExecutionModule\ICommand.cs" />
-    <Compile Include="ServerCommandsExecutionModule\ServerCommandArgs.cs" />
-    <Compile Include="ServerCommandsExecutionModule\ServerCommands.cs" />
     <Compile Include="ServerImplementation\MessengerServer.cs" />
-    <Compile Include="ServerImplementation\SocketRequestListener.cs" />
-    <Compile Include="ServerImplementation\UserDatabaseExample.cs" />
-    <Compile Include="SharingServerExceptions.cs" />
+    <Compile Include="ServerImplementation\DatabaseExample.cs" />
     <Compile Include="UserSession.cs" />
   </ItemGroup>
   <ItemGroup>

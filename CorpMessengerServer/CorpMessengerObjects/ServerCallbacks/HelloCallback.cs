@@ -10,7 +10,7 @@ namespace CorpMessengerObjects.ServerCallbacks
     {
         public string helloWords;
         public int uid;
-        public HelloCallback(int uid, string helloWords)
+        public HelloCallback(int uid, string helloWords) : base(uid)
         {
             this.uid = uid;
             this.helloWords = helloWords;

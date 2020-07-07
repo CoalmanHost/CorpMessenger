@@ -14,6 +14,8 @@ using CorpMessengerObjects.UserRequests;
 using Newtonsoft.Json;
 using CorpMessengerObjects.ServerCallbacks;
 using static CorpMessengerObjects.Utilities;
+using System.Linq.Expressions;
+using System.Data.Entity;
 
 namespace CorpMessengerServer.ServerImplementation
 {
@@ -21,14 +23,12 @@ namespace CorpMessengerServer.ServerImplementation
     {
         public readonly int serverPort = 1001;
         public readonly int usersMaxCount = 100;
-        public const int bufferSize = 1024;
+        public const int bufferSize = 10240;
         public bool Awake => throw new NotImplementedException();
 
         public Dictionary<int, UserSession> CurrentSessions => throw new NotImplementedException();
 
-        public RequestHandler RequestReciever => throw new NotImplementedException();
-
-        public IUserDatabase Users { get; private set; }
+        public IServerDatabase Database { get; private set; }
 
         Dictionary<int, UserSession> currentSessions;
         public static void LogToConsole(string message)
@@ -39,26 +39,70 @@ namespace CorpMessengerServer.ServerImplementation
         public void Initialize()
         {
             LogToConsole("Initializing database...");
-            Users = new UserDatabaseExample();
+            Database = new DatabaseExample();
             currentSessions = new Dictionary<int, UserSession>();
             LogToConsole("Starting listening...");
             StartListening();
         }
 
-        public void SendObject(int senderUID, int recieverUID, object sentObject)
+        public void SendObject(int senderUID, int receiverUID, object sentObject)
         {
-            UserSession sender = currentSessions[senderUID];
-            UserSession reciever = currentSessions[recieverUID];
-            Message message = new Message(Users.GetUser(senderUID), (string)sentObject);
-            SentObjectCallback callback = new SentObjectCallback(Users.GetUser(sender.masterUID), message);
+            Message message = new Message(Database.GetUser(senderUID), Database.GetUser(receiverUID), (string)sentObject);
+            Database.AddMessage(message);
+            if (currentSessions.ContainsKey(receiverUID))
+            {
+                UserSession sender = currentSessions[senderUID];
+                UserSession receiver = currentSessions[receiverUID];
 
-            byte[] toSend = Utilities.PackString(JsonConvert.SerializeObject(callback), bufferSize);
-            reciever.workingSocket.BeginSend(toSend, 0, bufferSize, 0, new AsyncCallback(EndSendingObject), reciever.workingSocket);
+                SentObjectCallback callback = new SentObjectCallback(Database.GetUser(sender.masterUID), Database.GetUser(receiver.masterUID), message);
+
+                byte[] toSend = Utilities.PackString(JsonConvert.SerializeObject(callback), bufferSize);
+                receiver.workingSocket.BeginSend(toSend, 0, bufferSize, 0, new AsyncCallback(EndSendingObject), receiver.workingSocket);
+            }
+        }
+        
+        void SendMessages(int receiverUID, TimePeriod period)
+        {
+            UserSession session = currentSessions[receiverUID];
+            MessengerServer.LogToConsole($"Trying to get messages for user {receiverUID} from the database...");
+            Expression<Func<Message, bool>> condition = m => m.ReceiverID == receiverUID;
+            switch (period)
+            {
+                case TimePeriod.All:
+                    condition = m => m.ReceiverID == receiverUID;
+                    break;
+                case TimePeriod.Day:
+                    condition = m => m.ReceiverID == receiverUID && DbFunctions.DiffDays(DateTime.Now, m.RecieveTime) <= 1;
+                    break;
+                case TimePeriod.Week:
+                    condition = m => m.ReceiverID == receiverUID && DbFunctions.DiffDays(DateTime.Now, m.RecieveTime) <= 7;
+                    break;
+                case TimePeriod.Month:
+                    condition = m => m.ReceiverID == receiverUID && DbFunctions.DiffMonths(DateTime.Now, m.RecieveTime) <= 1;
+                    break;
+                default:
+                    break;
+            }
+            GetMessagesCallback callback = new GetMessagesCallback(receiverUID, Database.GetMessages(condition).ToArray());
+
+            byte[] toSend = PackString(JsonConvert.SerializeObject(callback), bufferSize);
+            session.workingSocket.BeginSend(toSend, 0, bufferSize, 0, new AsyncCallback(EndSendingObject), session.workingSocket);
+        }
+        void SendUser(int receiverUID, int targetUID)
+        {
+            UserSession session = currentSessions[receiverUID];
+            MessengerServer.LogToConsole($"Trying to get user info for user {receiverUID} from the database...");
+            User target = Database.GetUser(targetUID);
+            GetUserCallback callback = new GetUserCallback(receiverUID, target);
+
+            byte[] toSend = PackString(JsonConvert.SerializeObject(callback), bufferSize);
+            session.workingSocket.BeginSend(toSend, 0, bufferSize, 0, new AsyncCallback(EndSendingObject), session.workingSocket);
         }
         void EndSendingObject(IAsyncResult asyncResult)
         {
             ((Socket)(asyncResult.AsyncState)).EndSend(asyncResult);
         }
+
 
         public void Sleep()
         {
@@ -115,7 +159,7 @@ namespace CorpMessengerServer.ServerImplementation
 
             dynamic helloUser = JsonConvert.DeserializeObject<HelloRequest>(Utilities.UnpackString(dataContainer.data));
             User connectedUser = helloUser.sender;
-            if (Users.UserExists(connectedUser))
+            if (Database.UserExists(connectedUser))
             {
                 LogToConsole($"Accepting existing user {connectedUser.Name} {connectedUser.Surname} with uid {connectedUser.Id}");
                 UserSession us = new UserSession(connectedUser.Id, dataContainer.workingSocket);
@@ -125,7 +169,7 @@ namespace CorpMessengerServer.ServerImplementation
             else
             {
                 LogToConsole($"New user {connectedUser.Name} {connectedUser.Surname} incoming. Adding to database...");
-                User added = Users.AddUser(connectedUser);
+                User added = Database.AddUser(connectedUser);
                 UserSession us = new UserSession(added.Id, dataContainer.workingSocket);
                 HelloCallback callback = new HelloCallback(added.Id, $"Connected new user! Hello user {added.Name} {added.Surname} with {us.masterUID}");
                 us.workingSocket.BeginSend(PackString(JsonConvert.SerializeObject(callback), bufferSize), 0, bufferSize, 0, new AsyncCallback(CompleteUserSessionCreation), us);
@@ -206,12 +250,24 @@ namespace CorpMessengerServer.ServerImplementation
                     break;
                 case RequestType.SendMessage:
                     SendDataRequest request = JsonConvert.DeserializeObject<SendDataRequest>(UnpackString(dataContainer.data));
-                    LogToConsole($"Message from user {request.senderUID} to user {request.recieverUID} with text: {(string)request.data}");
                     SendObject(session.masterUID, request.recieverUID, request.data);
+                    LogToConsole($"Message from user {request.senderUID} to user {request.recieverUID} with text: {(string)request.data}");
+                    break;
+                case RequestType.GetMessages:
+                    LogToConsole($"Requested messages for {session.masterUID}");
+                    GetMessagesRequest mrequest = JsonConvert.DeserializeObject<GetMessagesRequest>(UnpackString(dataContainer.data));
+                    SendMessages(mrequest.senderUID, mrequest.period);
+                    LogToConsole($"Sent messages to user {mrequest.senderUID}");
+                    break;
+                case RequestType.GetUser:
+                    LogToConsole($"Requested user info for {session.masterUID}");
+                    GetUserRequest urequest = JsonConvert.DeserializeObject<GetUserRequest>(UnpackString(dataContainer.data));
+                    SendUser(urequest.senderUID, urequest.targetUID);
                     break;
                 default:
                     break;
             }
+            HandleUserSession(session);
         }
     }
 }

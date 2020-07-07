@@ -48,11 +48,15 @@
     <Compile Include="Message.cs" />
     <Compile Include="ServerCallbacks\Callback.cs" />
     <Compile Include="ServerCallbacks\CallbackType.cs" />
+    <Compile Include="ServerCallbacks\GetMessagesCallback.cs" />
+    <Compile Include="ServerCallbacks\GetUserCallback.cs" />
     <Compile Include="ServerCallbacks\HelloCallback.cs" />
     <Compile Include="ServerCallbacks\SentObjectCallback.cs" />
     <Compile Include="User.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UserRequests\AddUserRequest.cs" />
+    <Compile Include="UserRequests\GetMessagesRequest.cs" />
+    <Compile Include="UserRequests\GetUserRequest.cs" />
     <Compile Include="UserRequests\HelloRequest.cs" />
     <Compile Include="UserRequests\Request.cs" />
     <Compile Include="UserRequests\RequestType.cs" />
