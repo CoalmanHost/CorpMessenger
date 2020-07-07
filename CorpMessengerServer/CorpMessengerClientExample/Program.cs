@@ -200,7 +200,6 @@ namespace CorpMessengerClientExample
                 Console.Write("Input server port -->");
                 config.serverPort = Console.ReadLine();
                 config.user = me;
-                File.WriteAllText(configFilePath, JsonConvert.SerializeObject(config));
             }
 
             //mailbox = new List<Message>();
@@ -224,6 +223,11 @@ namespace CorpMessengerClientExample
             HelloCallback hello;
             hello = JsonConvert.DeserializeObject<HelloCallback>(UnpackString(recieved));
             me.Id = hello.uid;
+            if (!successfullyRead)
+            {
+                config.user.Id = me.Id;
+                File.WriteAllText(configFilePath, JsonConvert.SerializeObject(config));
+            }
             Console.WriteLine(hello.helloWords);
             /*Thread messagesListener = new Thread(new ThreadStart(ListenIncomingMessages));
             messagesListener.Start();*/
