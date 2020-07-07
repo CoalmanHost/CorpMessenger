@@ -181,8 +181,8 @@ namespace CorpMessengerClientExample
             {
                 Console.WriteLine("Create new user profile:");
                 me = new User();
-                Console.Write("Input UID -->");
-                me.Id = int.Parse(Console.ReadLine());
+                //Console.Write("Input UID -->");
+                //me.Id = int.Parse(Console.ReadLine());
                 Console.Write("Input Name -->");
                 me.Name = Console.ReadLine();
                 Console.Write("Input Surname -->");
