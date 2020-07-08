@@ -84,7 +84,6 @@ namespace CorpMessengerClientExample
             {
                 return;
             }
-            locker.Reset();
             switch (commandElements[0])
             {
                 case "check":
@@ -119,7 +118,6 @@ namespace CorpMessengerClientExample
                 default:
                     break;
             }
-            locker.Set();
         }
 
         class MessageContainer
@@ -155,7 +153,7 @@ namespace CorpMessengerClientExample
             Message message = (JsonConvert.DeserializeObject<Message>(JsonConvert.SerializeObject(callback.sentData)));
             mailbox.Add(message);
         }*/
-        static void Main(string[] args)
+        static void StartClient()
         {
             ConfigProfile config = null;
             bool successfullyRead = true;
@@ -235,6 +233,18 @@ namespace CorpMessengerClientExample
             {
                 Console.Write(">");
                 ParseCommand(Console.ReadLine());
+            }
+        }
+        static void Main(string[] args)
+        {
+            try
+            {
+                StartClient();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadLine();
             }
         }
     }

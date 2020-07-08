@@ -11,8 +11,16 @@ namespace СorpMessengerServer
     {
         static void Main(string[] args)
         {
-            MessengerServer server = new MessengerServer();
-            server.Initialize();
+            try
+            {
+                MessengerServer server = new MessengerServer();
+                server.Initialize();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadLine();
+            }
         }
     }
 }

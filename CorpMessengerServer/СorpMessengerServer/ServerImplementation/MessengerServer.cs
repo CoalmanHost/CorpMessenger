@@ -49,7 +49,7 @@ namespace CorpMessengerServer.ServerImplementation
         {
             Message message = new Message(Database.GetUser(senderUID), Database.GetUser(receiverUID), (string)sentObject);
             Database.AddMessage(message);
-            if (currentSessions.ContainsKey(receiverUID))
+            /*if (currentSessions.ContainsKey(receiverUID))
             {
                 UserSession sender = currentSessions[senderUID];
                 UserSession receiver = currentSessions[receiverUID];
@@ -58,7 +58,7 @@ namespace CorpMessengerServer.ServerImplementation
 
                 byte[] toSend = Utilities.PackString(JsonConvert.SerializeObject(callback), bufferSize);
                 receiver.workingSocket.BeginSend(toSend, 0, bufferSize, 0, new AsyncCallback(EndSendingObject), receiver.workingSocket);
-            }
+            }*/
         }
         
         void SendMessages(int receiverUID, TimePeriod period)
@@ -215,6 +215,7 @@ namespace CorpMessengerServer.ServerImplementation
         void ReadRequestType(IAsyncResult asyncResultUserSession)
         {
             UserSessionIncomingRequestType requestContainer = (UserSessionIncomingRequestType)asyncResultUserSession.AsyncState;
+            LogToConsole($"Incoming request from {requestContainer.session.masterUID}");
             try
             {
                 requestContainer.session.workingSocket.EndReceive(asyncResultUserSession);
